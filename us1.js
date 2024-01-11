@@ -1,10 +1,10 @@
 // us1.tsx
-const {MongoClient, ServerApiVersion} = require('mongodb');
-const express = require('express');
-const bodyParser = require('body-parser');
-
+import { MongoClient, ServerApiVersion } from 'mongodb';
+import express from 'express';
+import bodyParser from 'body-parser';
+import dotenv from 'dotenv';
+dotenv.config();
 const app = express();
-require('dotenv').config();
 app.use(bodyParser.json());
 
 const uri = process.env.MongoURI;
@@ -21,13 +21,30 @@ const client = new MongoClient(uri, {
 app.post('/test', async (req, res) => {
   console.log('Request received:', req.body); // Log the received data
   try {
-    // You can add code here to handle and store the test data in MongoDB
-    // For this test, let's just send a response back
     res.status(200).json({message: 'Test data received successfully'});
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({error: error.message});
   }
+});
+
+app.post('/testMongo', async (req, res) => {
+  console.log('Request received:', req.body); // Log the received data
+  try {
+    await client.connect(); 
+    const database = client.db('userData'); 
+    const collection = database.collection('user'); 
+    // Perform a test operation, like finding a document
+    const testDoc = await collection.findOne({});
+    if (testDoc) {
+      res.status(200).json({ message: 'MongoDB request succeeded', data: testDoc });
+    } else {
+      res.status(404).json({ message: 'No documents found' });
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
+  } 
 });
 
 app.post('/storeYoutubeData', async (req, res) => {
@@ -110,7 +127,7 @@ app.get('/homeFeed', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(5000, () => {
+  console.log(`Server running on 5000`);
 });
+
