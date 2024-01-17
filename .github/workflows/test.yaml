@@ -13,12 +13,12 @@ jobs:
     - name: Check out repository code
       uses: actions/checkout@v2
 
-    - name: Set up SSH
-      run: |
-        mkdir -p ~/.ssh/
-        echo "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+    # - name: Set up SSH
+      # run: |
+      #   mkdir -p ~/.ssh/
+      #   echo "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+      #   chmod 600 ~/.ssh/id_rsa
+      #   ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
     - name: Deploy to EC2
       env:
@@ -26,7 +26,8 @@ jobs:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USER: ${{ secrets.EC2_USER }}
       run: |
-        ssh -v -o StrictHostKeyChecking=yes $EC2_USER@$EC2_HOST "ls -la" 
-
+          echo "$EC2_PRIVATE_KEY" > private_key && chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
+          cd /home/ec2-user/notes/MeGraphServer && ls -la
 #  ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cd /home/ec2-user/notes/MeGraphServer && git pull & npm start"
 
