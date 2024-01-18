@@ -27,7 +27,7 @@ jobs:
         EC2_USER: ${{ secrets.EC2_USER }}
       run: |
           echo "$EC2_PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -v -o StrictHostKeyChecking=no -i private_key ${EC2_USER}@${EC2_HOST} "cd /home/${EC2_USER}/notes/MeGraphServer && ls -la"
+          ssh -v -o StrictHostKeyChecking=no -i private_key ${EC2_USER}@${EC2_HOST} "cd /home/${EC2_USER}/MeGraphServer && ls -la"
 
 #  ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cd /home/ec2-user/notes/MeGraphServer && git pull & npm start"
 
