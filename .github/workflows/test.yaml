@@ -13,12 +13,12 @@ jobs:
     - name: Check out repository code
       uses: actions/checkout@v2
 
-    # - name: Set up SSH
-      # run: |
-      #   mkdir -p ~/.ssh/
-      #   echo "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-      #   chmod 600 ~/.ssh/id_rsa
-      #   ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+    - name: Set up SSH
+      run: |
+        mkdir -p ~/.ssh/
+        echo "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
     - name: Deploy to EC2
       env:
