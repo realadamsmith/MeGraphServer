@@ -1,4 +1,4 @@
-// us1.tsx
+// us1.js
 import { MongoClient, ServerApiVersion } from 'mongodb';
 import express from 'express';
 import bodyParser from 'body-parser';
@@ -8,7 +8,6 @@ const app = express();
 app.use(bodyParser.json());
 
 const uri = process.env.MongoURI;
-// Again
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -19,7 +18,7 @@ const client = new MongoClient(uri, {
 });
 
 app.post('/test', async (req, res) => {
-  console.log('Request received:', req.body); // Log the received data
+  console.log('Request received:', req.body); 
   try {
     res.status(200).json({message: 'Test data received successfully'});
   } catch (error) {
@@ -29,12 +28,11 @@ app.post('/test', async (req, res) => {
 });
 
 app.post('/testMongo', async (req, res) => {
-  console.log('Request received:', req.body); // Log the received data
+  console.log('Request received:', req.body); 
   try {
     await client.connect(); 
     const database = client.db('userData'); 
     const collection = database.collection('user'); 
-    // Perform a test operation, like finding a document
     const testDoc = await collection.findOne({});
     if (testDoc) {
       res.status(200).json({ message: 'MongoDB request succeeded', data: testDoc });
