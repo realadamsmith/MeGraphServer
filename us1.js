@@ -147,7 +147,6 @@ app.post('/likePost', async (req, res) => {
     const updateResult = await videoPosts.updateOne(
       { videoId: videoId },
       { $inc: { likeCount: 1 } }, // Increment the likeCount field
-      { upsert: true }
     );
 
     if (likeResult.insertedId && (updateResult.modifiedCount > 0 || updateResult.upsertedCount > 0)) {
