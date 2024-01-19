@@ -77,7 +77,7 @@ app.post('/storeLikes', async (req, res) => {
     const likesData = req.body.likes; // Assuming likes is an array of video data
     await client.connect();
     const database = client.db('userData'); 
-    const collection = database.collection('likesCollection'); 
+    const collection = database.collection('videoPosts'); 
 
     // Create bulk operations
     const bulkOps = likesData.map(likeData => {
@@ -108,7 +108,7 @@ app.get('/homeFeed', async (req, res) => {
   try {
     await client.connect();
     const database = client.db('userData'); 
-    const collection = database.collection('likesCollection'); 
+    const collection = database.collection('videoPosts'); 
     const data = await collection.find({})
                                  .sort({ likedAt: -1 })
                                  .skip(skip)
@@ -131,18 +131,26 @@ app.post('/likePost', async (req, res) => {
   try {
     await client.connect();
     const database = client.db('userData');
-    const collection = database.collection('likesCollection');
+    const likedPostsCollection = database.collection('likedPosts');
+    const videoPosts = database.collection('videoPosts');
 
     // Check if the user already liked the post
-    const existingLike = await collection.findOne({ userId, videoId });
+    const existingLike = await likedPostsCollection.findOne({ userId, videoId });
     if (existingLike) {
       return res.status(409).json({ message: 'User already liked this post' });
     }
 
-    // If not, add the new like
-    const result = await collection.insertOne({ userId, videoId, createdAt: new Date() });
+    // Add the new like to likedPosts collection
+    const likeResult = await likedPostsCollection.insertOne({ userId, videoId, createdAt: new Date() });
 
-    if (result.insertedId) {
+    // Increment the like count for the video in videoPosts
+    const updateResult = await videoPosts.updateOne(
+      { videoId: videoId },
+      { $inc: { likeCount: 1 } }, // Increment the likeCount field
+      { upsert: true }
+    );
+
+    if (likeResult.insertedId && (updateResult.modifiedCount > 0 || updateResult.upsertedCount > 0)) {
       res.status(200).json({ message: 'Successfully liked the post' });
     } else {
       res.status(400).json({ message: 'Failed to like the post' });
@@ -160,9 +168,9 @@ app.get('/likes', async (req, res) => {
   try {
     await client.connect();
     const database = client.db('userData');
-    const collection = database.collection('likesCollection');
-    const likesCount = await collection.countDocuments({ videoId });
-    res.status(200).json({ videoId, likesCount });
+    const videoPosts = database.collection('videoPosts');
+    const videoPost = await videoPosts.findOne({ videoId: videoId }, { projection: { likeCount: 1 } });
+    res.status(200).json({ videoId, likesCount: videoPost ? videoPost.likeCount : 0 });
   } catch (error) {
     console.error('Error fetching likes:', error);
     res.status(500).json({ error: error.message });
@@ -170,7 +178,6 @@ app.get('/likes', async (req, res) => {
     client.close();
   }
 });
-
 
 app.post('/commentPost', async (req, res) => {
   const { userId, videoId, comment } = req.body;
