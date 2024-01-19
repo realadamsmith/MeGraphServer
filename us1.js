@@ -125,6 +125,93 @@ app.get('/homeFeed', async (req, res) => {
   }
 });
 
+app.post('/likePost', async (req, res) => {
+  const { userId, videoId } = req.body;
+
+  try {
+    await client.connect();
+    const database = client.db('userData');
+    const collection = database.collection('likesCollection');
+
+    // Check if the user already liked the post
+    const existingLike = await collection.findOne({ userId, videoId });
+    if (existingLike) {
+      return res.status(409).json({ message: 'User already liked this post' });
+    }
+
+    // If not, add the new like
+    const result = await collection.insertOne({ userId, videoId, createdAt: new Date() });
+
+    if (result.insertedId) {
+      res.status(200).json({ message: 'Successfully liked the post' });
+    } else {
+      res.status(400).json({ message: 'Failed to like the post' });
+    }
+  } catch (error) {
+    console.error('Error liking post:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.close();
+  }
+});
+
+app.get('/likes', async (req, res) => {
+  const { videoId } = req.query;
+  try {
+    await client.connect();
+    const database = client.db('userData');
+    const collection = database.collection('likesCollection');
+    const likesCount = await collection.countDocuments({ videoId });
+    res.status(200).json({ videoId, likesCount });
+  } catch (error) {
+    console.error('Error fetching likes:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.close();
+  }
+});
+
+
+app.post('/commentPost', async (req, res) => {
+  const { userId, videoId, comment } = req.body;
+
+  try {
+    await client.connect();
+    const database = client.db('userData');
+    const collection = database.collection('commentsCollection');
+    
+    const result = await collection.insertOne({ userId, videoId, comment, createdAt: new Date() });
+    
+    if (result.insertedId) {
+      res.status(200).json({ message: 'Successfully commented on the post' });
+    } else {
+      res.status(400).json({ message: 'Failed to comment on the post' });
+    }
+  } catch (error) {
+    console.error('Error commenting on post:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.close();
+  }
+});
+
+app.get('/comments', async (req, res) => {
+  const { videoId } = req.query;
+  try {
+    await client.connect();
+    const database = client.db('userData');
+    const collection = database.collection('commentsCollection');
+    const comments = await collection.find({ videoId }).sort({ createdAt: -1 }).toArray();
+    res.status(200).json({ videoId, comments });
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.close();
+  }
+});
+
+
 app.listen(5000, () => {
   console.log(`Server running on 5000`);
 });
