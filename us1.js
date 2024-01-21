@@ -131,8 +131,8 @@ app.post('/likePost', async (req, res) => {
   try {
     await client.connect();
     const database = client.db('userData');
+    const videoPostsCollection = database.collection('videoPosts');
     const likedPostsCollection = database.collection('likedPosts');
-    const videoPosts = database.collection('videoPosts');
 
     // Check if the user already liked the post
     const existingLike = await likedPostsCollection.findOne({ userId, videoId });
@@ -141,15 +141,15 @@ app.post('/likePost', async (req, res) => {
     }
 
     // Add the new like to likedPosts collection
-    const likeResult = await likedPostsCollection.insertOne({ userId, videoId, createdAt: new Date() });
+    await likedPostsCollection.insertOne({ userId, videoId, createdAt: new Date() });
 
-    // Increment the like count for the video in videoPosts
-    const updateResult = await videoPosts.updateOne(
+    // Increment the like count for the video in videoPosts collection
+    const updateResult = await videoPostsCollection.updateOne(
       { videoId: videoId },
-      { $inc: { likeCount: 1 } }, // Increment the likeCount field
+      { $inc: { likeCount: 1 }, $addToSet: { likedPosts: userId } } // Increment the likeCount and add userId to likedPosts
     );
 
-    if (likeResult.insertedId && (updateResult.modifiedCount > 0 || updateResult.upsertedCount > 0)) {
+    if (updateResult.modifiedCount > 0) {
       res.status(200).json({ message: 'Successfully liked the post' });
     } else {
       res.status(400).json({ message: 'Failed to like the post' });
